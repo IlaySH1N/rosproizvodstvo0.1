@@ -92,13 +92,13 @@ export default function CompanyCard({ company }: CompanyCardProps) {
               )}
             </div>
             
-            {company.rating > 0 && (
+            {Number(company.rating) > 0 && (
               <div className="flex items-center space-x-1">
                 <div className="flex">
-                  {renderStars(company.rating)}
+                  {renderStars(Number(company.rating))}
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  {company.rating.toFixed(1)} ({company.reviewCount} отзыв{company.reviewCount === 1 ? '' : company.reviewCount < 5 ? 'а' : 'ов'})
+                  {Number(company.rating).toFixed(1)} ({company.reviewCount} отзыв{company.reviewCount === 1 ? '' : company.reviewCount < 5 ? 'а' : 'ов'})
                 </span>
               </div>
             )}
