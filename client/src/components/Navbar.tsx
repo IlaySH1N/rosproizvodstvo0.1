@@ -49,14 +49,16 @@ export default function Navbar() {
               <div className="hidden md:block ml-10">
                 <div className="flex items-baseline space-x-8">
                   {navigation.map((item) => (
-                    <Link key={item.name} href={item.href}>
-                      <a className={`px-3 py-2 text-sm font-medium transition-colors ${
+                    <Link 
+                      key={item.name} 
+                      href={item.href}
+                      className={`px-3 py-2 text-sm font-medium transition-colors ${
                         isActive(item.href)
                           ? 'text-primary border-b-2 border-primary'
                           : 'text-muted-foreground hover:text-primary'
-                      }`}>
-                        {item.name}
-                      </a>
+                      }`}
+                    >
+                      {item.name}
                     </Link>
                   ))}
                 </div>
@@ -133,36 +135,34 @@ export default function Navbar() {
                   <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                     <div className="flex flex-col space-y-4 mt-6">
                       {navigation.map((item) => (
-                        <Link key={item.name} href={item.href}>
-                          <a 
-                            className={`block px-3 py-2 text-base font-medium transition-colors ${
-                              isActive(item.href)
-                                ? 'text-primary bg-primary/10 rounded-lg'
-                                : 'text-muted-foreground hover:text-primary hover:bg-muted rounded-lg'
-                            }`}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            {item.name}
-                          </a>
+                        <Link 
+                          key={item.name} 
+                          href={item.href}
+                          className={`block px-3 py-2 text-base font-medium transition-colors ${
+                            isActive(item.href)
+                              ? 'text-primary bg-primary/10 rounded-lg'
+                              : 'text-muted-foreground hover:text-primary hover:bg-muted rounded-lg'
+                          }`}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          {item.name}
                         </Link>
                       ))}
                       <hr />
-                      <Link href="/dashboard">
-                        <a 
+                      <Link 
+                        href="/dashboard"
+                        className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-primary hover:bg-muted rounded-lg"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Дашборд
+                      </Link>
+                      {user?.company && (
+                        <Link 
+                          href={`/companies/${user.company.id}`}
                           className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-primary hover:bg-muted rounded-lg"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
-                          Дашборд
-                        </a>
-                      </Link>
-                      {user?.company && (
-                        <Link href={`/companies/${user.company.id}`}>
-                          <a 
-                            className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-primary hover:bg-muted rounded-lg"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            Моя компания
-                          </a>
+                          Моя компания
                         </Link>
                       )}
                       <Button 

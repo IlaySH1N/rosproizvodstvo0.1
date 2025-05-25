@@ -35,17 +35,13 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4">Платформа</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/orders">
-                  <a className="text-gray-400 hover:text-white transition-colors">
-                    Поиск заказов
-                  </a>
+                <Link href="/orders" className="text-gray-400 hover:text-white transition-colors">
+                  Поиск заказов
                 </Link>
               </li>
               <li>
-                <Link href="/companies">
-                  <a className="text-gray-400 hover:text-white transition-colors">
-                    Компании
-                  </a>
+                <Link href="/companies" className="text-gray-400 hover:text-white transition-colors">
+                  Компании
                 </Link>
               </li>
               <li>
@@ -54,10 +50,8 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <Link href="/dashboard">
-                  <a className="text-gray-400 hover:text-white transition-colors">
-                    Аналитика
-                  </a>
+                <Link href="/dashboard" className="text-gray-400 hover:text-white transition-colors">
+                  Аналитика
                 </Link>
               </li>
             </ul>
