@@ -31,8 +31,20 @@ export default function Landing() {
   });
 
   const handleSearch = () => {
-    // In a real app, this would navigate to orders page with filters
-    console.log("Search with filters:", searchFilters);
+    const params = new URLSearchParams();
+    if (searchFilters.category) params.set('category', searchFilters.category);
+    if (searchFilters.region) params.set('region', searchFilters.region);
+    if (searchFilters.budget) params.set('budget', searchFilters.budget);
+    
+    window.location.href = `/orders?${params.toString()}`;
+  };
+
+  const handleCreateCompany = () => {
+    window.location.href = '/companies';
+  };
+
+  const handleCreateOrder = () => {
+    window.location.href = '/orders';
   };
 
   return (
@@ -105,13 +117,13 @@ export default function Landing() {
 
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button 
-                onClick={() => window.location.href = '/api/login'} 
+                onClick={handleCreateCompany}
                 className="bg-white text-primary hover:bg-gray-50 px-8 py-3 rounded-lg font-semibold"
               >
                 Разместить компанию
               </Button>
               <Button 
-                onClick={() => window.location.href = '/api/login'} 
+                onClick={handleCreateOrder}
                 className="border-2 border-white text-white hover:bg-white hover:text-primary px-8 py-3 rounded-lg font-semibold"
               >
                 Опубликовать заказ

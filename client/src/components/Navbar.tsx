@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { User, LogOut, Building2, BarChart3, Menu } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { User, LogOut, Building2, BarChart3, Menu, Phone, Mail, MapPin, Star } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Navbar() {
@@ -13,10 +14,11 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigation = [
-    { name: "Заказы", href: "/orders" },
-    { name: "Компании", href: "/companies" },
+    { name: "Главная", href: "/" },
+    { name: "Поиск заказов", href: "/orders" },
+    { name: "Каталог компаний", href: "/companies" },
     { name: "Тарифы", href: "/#pricing" },
-    { name: "О нас", href: "/#about" },
+    { name: "Помощь", href: "/#help" },
   ];
 
   const isActive = (href: string) => {
@@ -33,9 +35,41 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white shadow-sm border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <>
+      {/* Top info bar */}
+      <div className="bg-primary text-white py-2 text-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-1">
+                <Phone className="h-3 w-3" />
+                <span>+7 (495) 123-45-67</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Mail className="h-3 w-3" />
+                <span>support@rosproizvodstvo.ru</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <MapPin className="h-3 w-3" />
+                <span>Работаем по всей России</span>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-1">
+                <Star className="h-3 w-3 text-yellow-400" />
+                <span>Надежная платформа с 2024 года</span>
+              </div>
+              <Badge variant="secondary" className="bg-white/20 text-white">
+                Бесплатная регистрация
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <nav className="bg-white shadow-sm border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
             <Link href={isAuthenticated ? "/" : "/"} className="flex-shrink-0">
@@ -192,7 +226,7 @@ export default function Navbar() {
             )}
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </>
   );
 }
