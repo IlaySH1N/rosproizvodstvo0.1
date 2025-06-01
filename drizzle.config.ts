@@ -5,10 +5,10 @@ if (!process.env.DATABASE_URL) {
 }
 
 export default defineConfig({
-  out: "./migrations",
-  schema: "./shared/schema.ts",
-  dialect: "sqlite", // ✅ Убедись, что диалект SQLite
+  out: "./migrations", // Папка для миграций
+  schema: "./shared/schema.ts", // Схема базы данных
+  dialect: "sqlite", // ✅ Диалект: SQLite
   dbCredentials: {
-    url: process.env.DATABASE_URL,
+    url: process.env.DATABASE_URL, // Берём из .env
   },
 });

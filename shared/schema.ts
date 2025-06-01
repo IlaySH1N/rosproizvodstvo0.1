@@ -3,14 +3,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Session storage table for Replit Auth
-export const sessions = sqliteTable("sessions", {
-  sid: text("sid").primaryKey(),
-  sess: text("sess").notNull(), // Хранение JSON как строки
-  expire: text("expire", { mode: "datetime" }).notNull(), // Используем текст вместо timestamp
-});
-
-// User storage table for Replit Auth
+// Пользователи
 export const users = sqliteTable("users", {
   id: text("id").primaryKey().notNull(),
   email: text("email").unique(),
@@ -22,17 +15,7 @@ export const users = sqliteTable("users", {
   updatedAt: text("updated_at").default("CURRENT_TIMESTAMP"),
 });
 
-// Tariff plans
-export const tariffs = sqliteTable("tariffs", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  name: text("name").notNull(),
-  price: integer("price").notNull(), // в рублях
-  features: text("features").notNull(), // Хранение JSON как строки
-  isActive: integer("is_active", { mode: "boolean" }).default(1),
-  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
-});
-
-// Companies
+// Компании
 export const companies = sqliteTable("companies", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: text("user_id").notNull(),
@@ -44,8 +27,8 @@ export const companies = sqliteTable("companies", {
   email: text("email"),
   address: text("address"),
   region: text("region", { length: 100 }),
-  category: text("category", { length: 100 }), // металлообработка, пищевое производство и т.д.
-  tags: text("tags"), // Хранение JSON как строки
+  category: text("category", { length: 100 }),
+  tags: text("tags"), // хранение JSON как строки
   tariffId: integer("tariff_id").references(() => tariffs.id),
   rating: real("rating").default(0),
   reviewCount: integer("review_count").default(0),
@@ -55,7 +38,7 @@ export const companies = sqliteTable("companies", {
   updatedAt: text("updated_at").default("CURRENT_TIMESTAMP"),
 });
 
-// Orders
+// Заказы
 export const orders = sqliteTable("orders", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   customerId: text("customer_id").notNull(),
@@ -63,33 +46,30 @@ export const orders = sqliteTable("orders", {
   description: text("description"),
   category: text("category", { length: 100 }),
   budget: real("budget"),
-  budgetMin: real("budget_min"),
-  budgetMax: real("budget_max"),
-  deadline: text("deadline", { mode: "date" }), // Хранение как строки
+  deadline: text("deadline", { mode: "date" }),
   region: text("region", { length: 100 }),
   requirements: text("requirements"),
-  attachments: text("attachments"), // Хранение JSON как строки
-  status: text("status").default("active"), // active, completed, cancelled
+  attachments: text("attachments"), // хранение JSON как строки
+  status: text("status").default("active"),
   responseCount: integer("response_count").default(0),
-  isUrgent: integer("is_urgent", { mode: "boolean" }).default(0),
   createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
   updatedAt: text("updated_at").default("CURRENT_TIMESTAMP"),
 });
 
-// Order responses
-export const orderResponses = sqliteTable("orderResponses", {
+// Отклики на заказы
+export const orderResponses = sqliteTable("order_responses", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   orderId: integer("order_id").notNull(),
   companyId: integer("company_id").notNull(),
   message: text("message"),
   proposedPrice: real("proposed_price"),
   proposedDeadline: text("proposed_deadline", { mode: "date" }),
-  attachments: text("attachments"), // Хранение JSON как строки
-  status: text("status").default("pending"), // pending, accepted, rejected
+  attachments: text("attachments"), // хранение JSON как строки
+  status: text("status").default("pending"),
   createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
 });
 
-// Company reviews
+// Отзывы
 export const reviews = sqliteTable("reviews", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   companyId: integer("company_id").notNull(),
@@ -100,7 +80,17 @@ export const reviews = sqliteTable("reviews", {
   createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
 });
 
-// Payments
+// Тарифные планы
+export const tariffs = sqliteTable("tariffs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  price: integer("price").notNull(), // цена в рублях
+  features: text("features").notNull(), // хранение JSON как строки
+  isActive: integer("is_active", { mode: "boolean" }).default(1),
+  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+});
+
+// ✅ Добавь таблицу `payments`
 export const payments = sqliteTable("payments", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   companyId: integer("company_id").notNull(),
@@ -112,6 +102,7 @@ export const payments = sqliteTable("payments", {
 });
 
 // Relations
+
 export const usersRelations = relations(users, ({ many }) => ({
   companies: many(companies),
   orders: many(orders),
@@ -129,7 +120,7 @@ export const companiesRelations = relations(companies, ({ one, many }) => ({
   }),
   orderResponses: many(orderResponses),
   reviews: many(reviews),
-  payments: many(payments),
+  payments: many(payments), // ✅ Теперь `payments` определён
 }));
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
@@ -166,6 +157,7 @@ export const reviewsRelations = relations(reviews, ({ one }) => ({
   }),
 }));
 
+// ✅ Добавлена таблица `payments`
 export const paymentsRelations = relations(payments, ({ one }) => ({
   company: one(companies, {
     fields: [payments.companyId],

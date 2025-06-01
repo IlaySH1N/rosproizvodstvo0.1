@@ -2,30 +2,35 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { 
-  insertCompanySchema, 
-  insertOrderSchema, 
+
+import {
+  insertCompanySchema,
+  insertOrderSchema,
   insertOrderResponseSchema,
-  insertReviewSchema 
+  insertReviewSchema,
+  insertTariffSchema,
+  Payment,
+  Tariff,
+  Company,
+  Order,
+  User
 } from "@shared/schema";
+
 import { ZodError } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+  // Используем заглушку, если Replit Auth отключён
+  // await setupAuth(app); // ✅ Закомментировано для локальной разработки
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub || 'local-user-id'; // Локальная заглушка
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
-      // Check if user has a company
       const company = await storage.getCompanyByUserId(userId);
-      
       res.json({ ...user, company });
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -80,7 +85,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         limit: parseInt(req.query.limit as string) || 20,
         offset: parseInt(req.query.offset as string) || 0,
       };
-
       const result = await storage.searchOrders(filters);
       res.json(result);
     } catch (error) {
@@ -93,14 +97,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const order = await storage.getOrder(id);
-      
       if (!order) {
         return res.status(404).json({ message: "Order not found" });
       }
-
-      // Get order responses
       const responses = await storage.getOrderResponses(id);
-      
       res.json({ ...order, responses });
     } catch (error) {
       console.error("Error fetching order:", error);
@@ -112,7 +112,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const orderData = insertOrderSchema.parse({ ...req.body, customerId: userId });
-      
       const order = await storage.createOrder(orderData);
       res.status(201).json(order);
     } catch (error) {
@@ -128,20 +127,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const userId = req.user.claims.sub;
-      
-      // Verify ownership
       const existingOrder = await storage.getOrder(id);
       if (!existingOrder || existingOrder.customerId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
-
       const updates = req.body;
       const order = await storage.updateOrder(id, updates);
-      
       if (!order) {
         return res.status(404).json({ message: "Order not found" });
       }
-
       res.json(order);
     } catch (error) {
       console.error("Error updating order:", error);
@@ -159,7 +153,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         limit: parseInt(req.query.limit as string) || 20,
         offset: parseInt(req.query.offset as string) || 0,
       };
-
       const result = await storage.searchCompanies(filters);
       res.json(result);
     } catch (error) {
@@ -172,14 +165,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const company = await storage.getCompany(id);
-      
       if (!company) {
         return res.status(404).json({ message: "Company not found" });
       }
-
-      // Get company reviews
       const reviews = await storage.getCompanyReviews(id);
-      
       res.json({ ...company, reviews });
     } catch (error) {
       console.error("Error fetching company:", error);
@@ -190,15 +179,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/companies', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      
-      // Check if user already has a company
       const existingCompany = await storage.getCompanyByUserId(userId);
       if (existingCompany) {
         return res.status(400).json({ message: "User already has a company" });
       }
-
       const companyData = insertCompanySchema.parse({ ...req.body, userId });
-      
       const company = await storage.createCompany(companyData);
       res.status(201).json(company);
     } catch (error) {
@@ -214,20 +199,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const userId = req.user.claims.sub;
-      
-      // Verify ownership
       const existingCompany = await storage.getCompany(id);
       if (!existingCompany || existingCompany.userId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
-
       const updates = req.body;
       const company = await storage.updateCompany(id, updates);
-      
       if (!company) {
         return res.status(404).json({ message: "Company not found" });
       }
-
       res.json(company);
     } catch (error) {
       console.error("Error updating company:", error);
@@ -240,19 +220,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const orderId = parseInt(req.params.orderId);
       const userId = req.user.claims.sub;
-      
-      // Get user's company
       const company = await storage.getCompanyByUserId(userId);
       if (!company) {
         return res.status(400).json({ message: "User must have a company to respond to orders" });
       }
-
       const responseData = insertOrderResponseSchema.parse({
         ...req.body,
         orderId,
         companyId: company.id,
       });
-      
       const response = await storage.createOrderResponse(responseData);
       res.status(201).json(response);
     } catch (error) {
@@ -270,15 +246,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { status } = req.body;
       const userId = req.user.claims.sub;
 
-      // Verify ownership - either order owner or company owner can update status
-      // This would need more complex verification logic in a real app
-      
+      // Verify ownership - можно расширить позже
       const response = await storage.updateOrderResponseStatus(id, status);
-      
       if (!response) {
         return res.status(404).json({ message: "Response not found" });
       }
-
       res.json(response);
     } catch (error) {
       console.error("Error updating response status:", error);
@@ -291,13 +263,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const companyId = parseInt(req.params.companyId);
       const userId = req.user.claims.sub;
-      
       const reviewData = insertReviewSchema.parse({
         ...req.body,
         companyId,
         customerId: userId,
       });
-      
       const review = await storage.createReview(reviewData);
       res.status(201).json(review);
     } catch (error) {
@@ -335,12 +305,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/dashboard/my-responses', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      
       const company = await storage.getCompanyByUserId(userId);
       if (!company) {
         return res.json([]);
       }
-
       const responses = await storage.getCompanyResponses(company.id);
       res.json(responses);
     } catch (error) {
@@ -349,6 +317,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Создаём HTTP-сервер
   const httpServer = createServer(app);
   return httpServer;
 }
