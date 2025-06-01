@@ -1,130 +1,114 @@
-import {
-  pgTable,
-  text,
-  varchar,
-  timestamp,
-  jsonb,
-  index,
-  serial,
-  integer,
-  decimal,
-  date,
-  boolean,
-} from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
 // Session storage table for Replit Auth
-export const sessions = pgTable(
-  "sessions",
-  {
-    sid: varchar("sid").primaryKey(),
-    sess: jsonb("sess").notNull(),
-    expire: timestamp("expire").notNull(),
-  },
-  (table) => [index("IDX_session_expire").on(table.expire)],
-);
+export const sessions = sqliteTable("sessions", {
+  sid: text("sid").primaryKey(),
+  sess: text("sess").notNull(), // Хранение JSON как строки
+  expire: text("expire", { mode: "datetime" }).notNull(), // Используем текст вместо timestamp
+});
 
 // User storage table for Replit Auth
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().notNull(),
-  email: varchar("email").unique(),
-  firstName: varchar("first_name"),
-  lastName: varchar("last_name"),
-  profileImageUrl: varchar("profile_image_url"),
-  role: varchar("role").notNull().default("client"), // client, company, admin
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey().notNull(),
+  email: text("email").unique(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  profileImageUrl: text("profile_image_url"),
+  role: text("role").notNull().default("client"), // client, company, admin
+  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+  updatedAt: text("updated_at").default("CURRENT_TIMESTAMP"),
 });
 
 // Tariff plans
-export const tariffs = pgTable("tariffs", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 50 }).notNull(),
+export const tariffs = sqliteTable("tariffs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
   price: integer("price").notNull(), // в рублях
-  features: jsonb("features").notNull(), // ["unlimited_responses", "top_placement", "analytics", "banner_ads"]
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").defaultNow(),
+  features: text("features").notNull(), // Хранение JSON как строки
+  isActive: integer("is_active", { mode: "boolean" }).default(1),
+  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
 });
 
 // Companies
-export const companies = pgTable("companies", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull(),
-  name: varchar("name", { length: 255 }).notNull(),
+export const companies = sqliteTable("companies", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: text("user_id").notNull(),
+  name: text("name").notNull(),
   description: text("description"),
   logoUrl: text("logo_url"),
-  website: varchar("website"),
-  phone: varchar("phone"),
-  email: varchar("email"),
+  website: text("website"),
+  phone: text("phone"),
+  email: text("email"),
   address: text("address"),
-  region: varchar("region", { length: 100 }),
-  category: varchar("category", { length: 100 }), // металлообработка, пищевое производство, etc.
-  tags: jsonb("tags").default([]), // array of specializations
+  region: text("region", { length: 100 }),
+  category: text("category", { length: 100 }), // металлообработка, пищевое производство и т.д.
+  tags: text("tags"), // Хранение JSON как строки
   tariffId: integer("tariff_id").references(() => tariffs.id),
-  rating: decimal("rating", { precision: 3, scale: 2 }).default("0"),
+  rating: real("rating").default(0),
   reviewCount: integer("review_count").default(0),
-  isVerified: boolean("is_verified").default(false),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  isVerified: integer("is_verified", { mode: "boolean" }).default(0),
+  isActive: integer("is_active", { mode: "boolean" }).default(1),
+  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+  updatedAt: text("updated_at").default("CURRENT_TIMESTAMP"),
 });
 
 // Orders
-export const orders = pgTable("orders", {
-  id: serial("id").primaryKey(),
-  customerId: varchar("customer_id").notNull(),
-  title: varchar("title", { length: 255 }).notNull(),
+export const orders = sqliteTable("orders", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  customerId: text("customer_id").notNull(),
+  title: text("title").notNull(),
   description: text("description"),
-  category: varchar("category", { length: 100 }),
-  budget: decimal("budget", { precision: 12, scale: 2 }),
-  budgetMin: decimal("budget_min", { precision: 12, scale: 2 }),
-  budgetMax: decimal("budget_max", { precision: 12, scale: 2 }),
-  deadline: date("deadline"),
-  region: varchar("region", { length: 100 }),
+  category: text("category", { length: 100 }),
+  budget: real("budget"),
+  budgetMin: real("budget_min"),
+  budgetMax: real("budget_max"),
+  deadline: text("deadline", { mode: "date" }), // Хранение как строки
+  region: text("region", { length: 100 }),
   requirements: text("requirements"),
-  attachments: jsonb("attachments").default([]), // array of file URLs
-  status: varchar("status", { length: 50 }).default("active"), // active, completed, cancelled
+  attachments: text("attachments"), // Хранение JSON как строки
+  status: text("status").default("active"), // active, completed, cancelled
   responseCount: integer("response_count").default(0),
-  isUrgent: boolean("is_urgent").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  isUrgent: integer("is_urgent", { mode: "boolean" }).default(0),
+  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+  updatedAt: text("updated_at").default("CURRENT_TIMESTAMP"),
 });
 
 // Order responses
-export const orderResponses = pgTable("order_responses", {
-  id: serial("id").primaryKey(),
+export const orderResponses = sqliteTable("orderResponses", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   orderId: integer("order_id").notNull(),
   companyId: integer("company_id").notNull(),
   message: text("message"),
-  proposedPrice: decimal("proposed_price", { precision: 12, scale: 2 }),
-  proposedDeadline: date("proposed_deadline"),
-  attachments: jsonb("attachments").default([]),
-  status: varchar("status", { length: 50 }).default("pending"), // pending, accepted, rejected
-  createdAt: timestamp("created_at").defaultNow(),
+  proposedPrice: real("proposed_price"),
+  proposedDeadline: text("proposed_deadline", { mode: "date" }),
+  attachments: text("attachments"), // Хранение JSON как строки
+  status: text("status").default("pending"), // pending, accepted, rejected
+  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
 });
 
 // Company reviews
-export const reviews = pgTable("reviews", {
-  id: serial("id").primaryKey(),
+export const reviews = sqliteTable("reviews", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   companyId: integer("company_id").notNull(),
-  customerId: varchar("customer_id").notNull(),
+  customerId: text("customer_id").notNull(),
   orderId: integer("order_id"),
   rating: integer("rating").notNull(), // 1-5
   comment: text("comment"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
 });
 
 // Payments
-export const payments = pgTable("payments", {
-  id: serial("id").primaryKey(),
+export const payments = sqliteTable("payments", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   companyId: integer("company_id").notNull(),
   tariffId: integer("tariff_id").notNull(),
   amount: integer("amount").notNull(),
-  status: varchar("status", { length: 50 }).default("pending"), // pending, completed, failed
-  paymentDate: timestamp("payment_date").defaultNow(),
-  expiresAt: timestamp("expires_at"),
+  status: text("status").default("pending"), // pending, completed, failed
+  paymentDate: text("payment_date").default("CURRENT_TIMESTAMP"),
+  expiresAt: text("expires_at", { mode: "datetime" }),
 });
 
 // Relations
@@ -247,5 +231,9 @@ export type Payment = typeof payments.$inferSelect;
 // Extended types with relations
 export type CompanyWithTariff = Company & { tariff: Tariff | null };
 export type OrderWithCustomer = Order & { customer: User };
-export type OrderWithResponses = Order & { responses: (OrderResponse & { company: Company })[] };
-export type CompanyWithReviews = Company & { reviews: (Review & { customer: User })[] };
+export type OrderWithResponses = Order & {
+  responses: (OrderResponse & { company: Company })[];
+};
+export type CompanyWithReviews = Company & {
+  reviews: (Review & { customer: User })[];
+};
